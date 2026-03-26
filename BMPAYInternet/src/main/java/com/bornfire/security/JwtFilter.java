@@ -13,65 +13,75 @@ import io.jsonwebtoken.Claims;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 public class JwtFilter extends OncePerRequestFilter {
     
     private static final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
+    private static final List<String> PUBLIC_ENDPOINTS = List.of(
+        "/api/LoginAndroid", "/api/LoginForTab", "/api/LoginforMobile",
+        "/api/OtpForUser", "/api/OtpForMerchant", "/api/OtpForAndroid",
+        "/api/getStaticPaydetails", "/api/ws/StaticMaucas", "/api/CheckDeviceId",
+        "/api/CheckTwoFactorAnswer", "/error"
+    );
     
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
                                    FilterChain filterChain) throws ServletException, IOException {
         
         String path = request.getRequestURI();
-        logger.info("🔍 Filtering: " + path);
+        logger.debug("🔍 Filtering: {}", path);
 
         // ✅ Public endpoints
         if (isPublicEndpoint(path)) {
-            logger.debug("✅ Public endpoint: " + path);
+            logger.debug("✅ Public endpoint: {}", path);
             filterChain.doFilter(request, response);
             return;
         }
 
         String authHeader = request.getHeader("Authorization");
+    
+
+        // ✅ Check Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.warn("❌ No JWT token");
-            sendError(response, 401, "JWT token required");
+            logger.warn("❌ Missing or invalid Authorization header");
+            sendError(response, 401, "Authorization header with Bearer token required");
             return;
         }
 
-        String token = authHeader.substring(7);
-        String headerDeviceId = request.getHeader("PSU_Device_ID");
+        
+
+        String token = authHeader.substring(7).trim();
 
         try {
+            // ✅ Validate JWT token
             Claims claims = JwtUtil.validateToken(token);
             String jwtUserId = claims.getSubject();
-            String jwtDeviceId = (String) claims.get("deviceId");
+            String jwtMerchantId = JwtUtil.getMerchantId(token); // ✅ Use safe getter
 
-            logger.info("✅ JWT Valid - User: {}, Device: {}", jwtUserId, jwtDeviceId);
-
-            // 🔥 STRICT DEVICE VALIDATION
-            if (headerDeviceId == null || jwtDeviceId == null) {
-                logger.warn("❌ Missing device ID - Header: {}, JWT: {}", headerDeviceId, jwtDeviceId);
-                sendError(response, 403, "Device ID required");
+            // ✅ Validate claims
+            if (jwtUserId == null || jwtUserId.trim().isEmpty()) {
+                logger.warn("❌ Invalid userId in JWT");
+                sendError(response, 401, "Invalid user in token");
                 return;
             }
 
-            if (!jwtDeviceId.equals(headerDeviceId)) {
-                logger.warn("❌ DEVICE MISMATCH - JWT: {}, Header: {}", jwtDeviceId, headerDeviceId);
-                sendError(response, 403, "Device ID mismatch");
-                return;
-            }
+            logger.info("✅ JWT Valid - User: {}, Merchant: {}, Device: {}", 
+                       jwtUserId, jwtMerchantId);
 
-            // ✅ Authentication successful
+            // ✅ Set authentication and request attributes
             UsernamePasswordAuthenticationToken auth = 
                 new UsernamePasswordAuthenticationToken(jwtUserId, null, Collections.emptyList());
             SecurityContextHolder.getContext().setAuthentication(auth);
+            
             request.setAttribute("userId", jwtUserId);
-            request.setAttribute("deviceId", jwtDeviceId);
+            request.setAttribute("merchantId", jwtMerchantId);
+         
 
         } catch (Exception e) {
-            logger.error("❌ JWT validation failed: {}", e.getMessage());
-            sendError(response, 401, "Invalid JWT token");
+            logger.error("❌ JWT validation failed for path {}: {}", path, e.getMessage());
+            SecurityContextHolder.clearContext();
+            sendError(response, 401, "Invalid or expired JWT token");
             return;
         }
 
@@ -79,18 +89,21 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private boolean isPublicEndpoint(String path) {
-        return path.contains("/api/LoginAndroid") ||
-               path.contains("/api/CheckDeviceId") ||
-               path.contains("/api/OtpFor") ||
-               path.contains("/api/ws/StaticMaucas") ||
-               path.contains("/api/getStaticPaydetails") ||
-               path.contains("/error");
+        return PUBLIC_ENDPOINTS.stream().anyMatch(path::contains);
     }
 
     private void sendError(HttpServletResponse response, int status, String message) throws IOException {
+        logger.warn("Sending error {}: {}", status, message);
         response.setStatus(status);
-        response.setContentType("application/json");
-        response.setHeader("Cache-Control", "no-store");
-        response.getWriter().write(String.format("{\"status\":\"Error\",\"message\":\"%s\"}", message));
+        response.setContentType("application/json;charset=UTF-8");
+        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        
+        String jsonResponse = String.format(
+            "{\"status\":\"error\",\"message\":\"%s\",\"timestamp\":%d}", 
+            message.replace("\"", "\\\""), 
+            System.currentTimeMillis()
+        );
+        response.getWriter().write(jsonResponse);
     }
 }

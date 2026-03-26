@@ -1,5 +1,7 @@
 package com.bornfire.controller;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import org.slf4j.Logger;
@@ -17,24 +19,53 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.bornfire.configuration.Encryption;
 import com.bornfire.entity.EncryptionEntity;
 import com.bornfire.entity.InfoTableEntity;
 import com.bornfire.security.JwtUtil;
 import com.bornfire.service.LoginService;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/api")
 public class LoginContoller {
 
 	private static final Logger logger = LoggerFactory.getLogger(LoginContoller.class);
+	 private String extractUserId(String loginData) {
+	        if (loginData == null) return "unknown";
+	        String[] parts = loginData.split(",");
+	        for (String part : parts) {
+	            if (part.contains("merchant_rep_id=")) {
+	                return part.split("=")[1].trim();
+	            }
+	            if (part.contains("merchant_user_id=")) {
+	                return part.split("=")[1].trim();
+	            }
+	        }
+	        return "unknown";
+	    }
+	    
+	    private String extractMerchantId(String loginData) {
+	        if (loginData == null) return "unknown";
+	        String[] parts = loginData.split(",");
+	        for (String part : parts) {
+	            if (part.contains("merchant_name=")) {
+	                return part.split("=")[1].trim();
+	            }
+	            if (part.contains("merchant_user_id=")) {
+	                return part.split("=")[1].trim();
+	            }
+	        }
+	        return "unknown";
+	    }
 
 	@Autowired
 	LoginService loginService;
 	
 	@Autowired
 	private RestTemplate restTemplate;
+	@Autowired
+	private Encryption encryption;
 
 	@Autowired
 	Environment env;
@@ -59,122 +90,44 @@ public class LoginContoller {
 		return response;
 	}
 
-//	// Login for Tab
+	// Login for Tab
 //	@PostMapping("LoginAndroid")
 //	public String LoginAndroid(@RequestBody EncryptionEntity EncryptedString,
 //			@RequestHeader(value = "PSU_Device_ID", required = true) String psuDeviceID) throws Exception {
 //		try {
 //			String response = loginService.RepAndroidLogin(EncryptedString,psuDeviceID);
-//			String userId = extractUserId(response);
-//
-//			if (userId != null) {
-//	            // ✅ Generate JWT with ANDROID_ID (not random PSU_Device_ID)
-//	            String token = JwtUtil.generateToken(userId, psuDeviceID);
-//	            return response + ",token=" + token; // Your existing format
-//	        }
-//	        
-//	        return response;
+//			return response;
 //		} catch (Exception e) {
 //			logger.debug("Login for TAB Exception: " + e.getMessage());
 //			System.out.println("Exception: " + e.getMessage());
 //			return  e.getMessage();
 //		}
 //	}
-//	private String extractUserId(String response) {
-//	    if (response == null) return null;
-//
-//	    try {
-//	        String[] parts = response.split(",");
-//
-//	        for (String part : parts) {
-//	            String[] keyValue = part.split("=");
-//
-//	            if (keyValue.length == 2 && keyValue[0].trim().equals("merchant_user_id")) {
-//	                return keyValue[1].trim();
-//	            }
-//	        }
-//	    } catch (Exception e) {
-//	        e.printStackTrace();
-//	    }
-//
-//	    return null;
-//	}
 	@PostMapping("LoginAndroid")
-	public ResponseEntity<String> LoginAndroidTab(
-	        @RequestBody EncryptionEntity request,
-	        @RequestHeader(value = "PSU_Device_ID", required = true) String psuDeviceID) {
+	public String LoginAndroid(@RequestBody EncryptionEntity EncryptedString,
+	        @RequestHeader("PSU_Device_ID") String deviceId) throws Exception {
+	    String loginData = loginService.RepAndroidLogin(EncryptedString, deviceId);
 	    
-	    try {
-	        // 🔥 YOUR EXISTING BIPS CALL (KEEP IT)
-	        String bipsportalResponse = loginService.RepAndroidLogin(request, psuDeviceID);
-	        
-	        // 🔥 EXTRACT USERID from BIPS response (no decryption needed here)
-	        String userId = extractUserIdFromEncrypted(bipsportalResponse);
-	        
-	        if (userId != null && !userId.trim().isEmpty()) {
-	            // ✅ Generate JWT with STABLE Android ID
-	            String jwtToken = JwtUtil.generateToken(userId, userId, psuDeviceID);
-	            
-	            // 🔥 RETURN PLAIN JSON - NO ENCRYPTION!
-	            String plainJsonResponse = String.format(
-	                "{\"status\":\"Success\",\"message\":\"%s\",\"token\":\"%s\"}",
-	                bipsportalResponse.replace("\"", "\\\""),  // Keep BIPS data as-is
-	                jwtToken
-	            );
-	            return ResponseEntity.ok(plainJsonResponse);  // ← PLAIN TEXT!
-	        }
-	        
-	        // Fallback: return original BIPS response as plain text
-	        return ResponseEntity.ok(bipsportalResponse);
-	        
-	    } catch (Exception e) {
-	        logger.error("LoginAndroid failed", e);
-	        return ResponseEntity.status(500).body(
-	            "{\"status\":\"Failed\",\"message\":\"Server Error\"}"
-	        );
-	    }
-	}
-	// ✅ Method 1: Check if login was successful
-	private boolean isLoginSuccess(String response) {
-	    if (response == null) return false;
-	    String lower = response.toLowerCase();
-	    return lower.contains("success") || 
-	           lower.contains("merchant_user_id") || 
-	           lower.contains("merchant_rep_id") ||
-	           lower.contains("loginentity") ||
-	           !lower.contains("error") && 
-	           !lower.contains("failed");
-	}
+	    // Extract from loginData or database
+	    String userId = extractUserId(loginData); 
+	    String merchantId = extractMerchantId(loginData);
+	    
+	    // Generate JWT
+	    String jwtToken = JwtUtil.generateToken(userId, merchantId);
+	    
+	   // String responseJson = "{\"token\":\"" + jwtToken + "\", \"data\":\"" + loginData + "\"}";
+	    ObjectMapper mapper = new ObjectMapper();
 
-	// ✅ Method 2: Extract user ID from BIPS response
-	private String extractUserIdFromEncrypted(String response) {
-	    if (response == null) return null;
-	    try {
-	        Pattern pattern = Pattern.compile("(?i)(merchant_?user_?id|user_?id|merchant_?rep_?id)=(\\d+)", 
-	                                         Pattern.CASE_INSENSITIVE);
-	        Matcher matcher = pattern.matcher(response);
-	        if (matcher.find()) {
-	            return matcher.group(2);
-	        }
-	    } catch (Exception e) {
-	        System.err.println("UserID extraction failed: " + e.getMessage());
-	    }
-	    return null;
-	}
+	    Map<String, Object> responseMap = new HashMap<>();
+	    responseMap.put("status", "Success");
+	    responseMap.put("data", loginData); // REAL OBJECT, not string
+	    responseMap.put("token", jwtToken);
 
-	// ✅ Method 3: Extract merchant ID from BIPS response  
-	private String extractMerchantIdFromEncrypted(String response) {
-	    if (response == null) return null;
-	    try {
-	        Pattern pattern = Pattern.compile("(?i)merchant_?id=(\\d+)", Pattern.CASE_INSENSITIVE);
-	        Matcher matcher = pattern.matcher(response);
-	        if (matcher.find()) {
-	            return matcher.group(1);
-	        }
-	    } catch (Exception e) {
-	        System.err.println("MerchantID extraction failed: " + e.getMessage());
-	    }
-	    return null;
+	    String responseJson = mapper.writeValueAsString(responseMap);
+	    String encryptedResponse = encryption.encrypt(responseJson, deviceId);
+
+	    return encryptedResponse;
+	 
 	}
 
 	@PostMapping("LoginForTab")
