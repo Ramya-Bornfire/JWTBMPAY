@@ -106,29 +106,41 @@ public class LoginContoller {
 	@PostMapping("LoginAndroid")
 	public String LoginAndroid(@RequestBody EncryptionEntity EncryptedString,
 	        @RequestHeader("PSU_Device_ID") String deviceId) throws Exception {
+
 	    String loginData = loginService.RepAndroidLogin(EncryptedString, deviceId);
-	    
-	    // Extract from loginData or database
-	    String userId = extractUserId(loginData); 
+
+	    // ✅ CHECK FAILURE FIRST
+	    if (loginData.contains("already logged in") || 
+	        loginData.contains("Invalid") ||
+	        loginData.contains("Error")) {
+
+	        Map<String, Object> errorMap = new HashMap<>();
+	        errorMap.put("status", "FAIL");
+	        errorMap.put("message", loginData);
+
+	        ObjectMapper mapper = new ObjectMapper();
+	        String responseJson = mapper.writeValueAsString(errorMap);
+
+	        return encryption.encrypt(responseJson, deviceId);
+	    }
+
+	    // ✅ ONLY SUCCESS → generate token
+	    String userId = extractUserId(loginData);
 	    String merchantId = extractMerchantId(loginData);
-	    
-	    // Generate JWT
+
 	    String jwtToken = JwtUtil.generateToken(userId, merchantId);
-	    
-	   // String responseJson = "{\"token\":\"" + jwtToken + "\", \"data\":\"" + loginData + "\"}";
-	    ObjectMapper mapper = new ObjectMapper();
 
 	    Map<String, Object> responseMap = new HashMap<>();
 	    responseMap.put("status", "Success");
-	    responseMap.put("data", loginData); // REAL OBJECT, not string
+	    responseMap.put("data", loginData);
 	    responseMap.put("token", jwtToken);
 
+	    ObjectMapper mapper = new ObjectMapper();
 	    String responseJson = mapper.writeValueAsString(responseMap);
-	    String encryptedResponse = encryption.encrypt(responseJson, deviceId);
 
-	    return encryptedResponse;
-	 
+	    return encryption.encrypt(responseJson, deviceId);
 	}
+
 
 	@PostMapping("LoginForTab")
 	public String LoginTab(@RequestBody EncryptionEntity EncryptedString,
