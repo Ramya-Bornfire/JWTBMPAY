@@ -1,61 +1,71 @@
 package com.bornfire.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
+@Component
 public class JwtUtil {
-    // ✅ Use a cryptographically secure 256-bit key (32 bytes minimum for HS256)
-    private static final String SECRET = "mySecretKeyForJWT2024VeryLongAndSecure1234567890abcdef";
-    private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
-    
-    // ✅ 1 hour expiration
-    private static final long EXPIRATION_TIME = 1000 * 60 * 60; 
 
-    public static String generateToken(String userId, String merchantId) {
+    @Value("${jwt.secret}")
+    private String secret;
+
+    @Value("${jwt.expiration}")
+    private Long expiration; // in milliseconds
+
+    private Key getSigningKey() {
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public String generateToken(String userId, String merchantId, String role) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("merchantId", merchantId);
+        claims.put("role", role);
         return Jwts.builder()
+                .setClaims(claims)
                 .setSubject(userId)
-                .claim("merchantId", merchantId)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public static Claims validateToken(String token) throws Exception {
+    public String extractUserId(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public String extractMerchantId(String token) {
+        return extractClaim(token, claims -> claims.get("merchantId", String.class));
+    }
+
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
+    public boolean validateToken(String token) {
         try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(SECRET_KEY)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (SignatureException e) {
-            throw new Exception("Invalid JWT signature");
-        } catch (io.jsonwebtoken.ExpiredJwtException e) {
-            throw new Exception("JWT token expired");
-        } catch (Exception e) {
-            throw new Exception("Invalid JWT token: " + e.getMessage());
+            Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
         }
     }
 
-    public static String getUserId(String token) throws Exception {
-        return validateToken(token).getSubject();
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
     }
-    
-    public static String getMerchantId(String token) throws Exception {
-        Claims claims = validateToken(token);
-        String merchantId = claims.get("merchantId", String.class);
-        if (merchantId == null || merchantId.trim().isEmpty()) {
-            throw new Exception("merchantId not found in token");
-        }
-        return merchantId;
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
     }
-    
 }

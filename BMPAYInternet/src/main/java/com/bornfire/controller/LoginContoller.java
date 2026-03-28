@@ -1,7 +1,5 @@
 package com.bornfire.controller;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import org.slf4j.Logger;
@@ -10,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,53 +19,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import com.bornfire.configuration.Encryption;
 import com.bornfire.entity.EncryptionEntity;
 import com.bornfire.entity.InfoTableEntity;
-import com.bornfire.security.JwtUtil;
 import com.bornfire.service.LoginService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/api")
 public class LoginContoller {
 
 	private static final Logger logger = LoggerFactory.getLogger(LoginContoller.class);
-	 private String extractUserId(String loginData) {
-	        if (loginData == null) return "unknown";
-	        String[] parts = loginData.split(",");
-	        for (String part : parts) {
-	            if (part.contains("merchant_rep_id=")) {
-	                return part.split("=")[1].trim();
-	            }
-	            if (part.contains("merchant_user_id=")) {
-	                return part.split("=")[1].trim();
-	            }
-	        }
-	        return "unknown";
-	    }
-	    
-	    private String extractMerchantId(String loginData) {
-	        if (loginData == null) return "unknown";
-	        String[] parts = loginData.split(",");
-	        for (String part : parts) {
-	            if (part.contains("merchant_name=")) {
-	                return part.split("=")[1].trim();
-	            }
-	            if (part.contains("merchant_user_id=")) {
-	                return part.split("=")[1].trim();
-	            }
-	        }
-	        return "unknown";
-	    }
 
 	@Autowired
 	LoginService loginService;
 	
 	@Autowired
 	private RestTemplate restTemplate;
-	@Autowired
-	private Encryption encryption;
 
 	@Autowired
 	Environment env;
@@ -91,56 +59,18 @@ public class LoginContoller {
 	}
 
 	// Login for Tab
-//	@PostMapping("LoginAndroid")
-//	public String LoginAndroid(@RequestBody EncryptionEntity EncryptedString,
-//			@RequestHeader(value = "PSU_Device_ID", required = true) String psuDeviceID) throws Exception {
-//		try {
-//			String response = loginService.RepAndroidLogin(EncryptedString,psuDeviceID);
-//			return response;
-//		} catch (Exception e) {
-//			logger.debug("Login for TAB Exception: " + e.getMessage());
-//			System.out.println("Exception: " + e.getMessage());
-//			return  e.getMessage();
-//		}
-//	}
 	@PostMapping("LoginAndroid")
 	public String LoginAndroid(@RequestBody EncryptionEntity EncryptedString,
-	        @RequestHeader("PSU_Device_ID") String deviceId) throws Exception {
-
-	    String loginData = loginService.RepAndroidLogin(EncryptedString, deviceId);
-
-	    // ✅ CHECK FAILURE FIRST
-	    if (loginData.contains("already logged in") || 
-	        loginData.contains("Invalid") ||
-	        loginData.contains("Error")) {
-
-	        Map<String, Object> errorMap = new HashMap<>();
-	        errorMap.put("status", "FAIL");
-	        errorMap.put("message", loginData);
-
-	        ObjectMapper mapper = new ObjectMapper();
-	        String responseJson = mapper.writeValueAsString(errorMap);
-
-	        return encryption.encrypt(responseJson, deviceId);
-	    }
-
-	    // ✅ ONLY SUCCESS → generate token
-	    String userId = extractUserId(loginData);
-	    String merchantId = extractMerchantId(loginData);
-
-	    String jwtToken = JwtUtil.generateToken(userId, merchantId);
-
-	    Map<String, Object> responseMap = new HashMap<>();
-	    responseMap.put("status", "Success");
-	    responseMap.put("data", loginData);
-	    responseMap.put("token", jwtToken);
-
-	    ObjectMapper mapper = new ObjectMapper();
-	    String responseJson = mapper.writeValueAsString(responseMap);
-
-	    return encryption.encrypt(responseJson, deviceId);
+			@RequestHeader(value = "PSU_Device_ID", required = true) String psuDeviceID) throws Exception {
+		try {
+			String response = loginService.RepAndroidLogin(EncryptedString,psuDeviceID);
+			return response;
+		} catch (Exception e) {
+			logger.debug("Login for TAB Exception: " + e.getMessage());
+			System.out.println("Exception: " + e.getMessage());
+			return  e.getMessage();
+		}
 	}
-
 
 	@PostMapping("LoginForTab")
 	public String LoginTab(@RequestBody EncryptionEntity EncryptedString,
