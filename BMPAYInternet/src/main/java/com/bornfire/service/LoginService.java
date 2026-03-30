@@ -39,6 +39,12 @@ public class LoginService {
 	@Autowired
 	private JwtUtil jwtUtil;
 	
+	private static final String GENERIC_AUTH_FAILURE     = "Invalid credentials. Please try again.";
+	private static final String GENERIC_LOGOUT_FAILURE   = "Logout failed. Please try again.";
+	private static final String GENERIC_OTP_FAILURE      = "If the account exists, an OTP has been sent.";
+	private static final String GENERIC_RESET_FAILURE    = "Password reset failed. Please try again.";
+	private static final String GENERIC_PROFILE_FAILURE  = "Profile update failed. Please try again.";
+	
 	// Update Representative Profile
 	public String UpdateUserDetailsProfile(EncryptionEntity EncryptedString, String psuDeviceID) {
 		String updateurl = env.getProperty("intranetconnection") + "/api/UpdateRepresentativeProfile";
@@ -53,7 +59,7 @@ public class LoginService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Merchant Representative profile--->Not able to update" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_PROFILE_FAILURE;
 		}
 	}
 
@@ -71,7 +77,7 @@ public class LoginService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Merchant Representative Login--->Not able to update" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_AUTH_FAILURE;
 		}
 	}
 	
@@ -135,7 +141,7 @@ public class LoginService {
 	            }
 	        } catch (Exception e) {
 	            logger.error("Error during Android login", e);
-	            return "Error: " + e.getMessage();
+	            return GENERIC_AUTH_FAILURE;
 	        }
 	    }
 
@@ -223,7 +229,7 @@ public class LoginService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Merchant Representative Logout--->Not able to update" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_LOGOUT_FAILURE;
 		}
 	}
 
@@ -240,7 +246,7 @@ public class LoginService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("User Login--->Not able to update" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_AUTH_FAILURE;
 		}
 	}
 
@@ -257,7 +263,7 @@ public class LoginService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("User Logout--->Not able to update" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_LOGOUT_FAILURE;
 		}
 	}
 
@@ -273,7 +279,7 @@ public class LoginService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("OTP" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_OTP_FAILURE;
 		}
 	}
 
@@ -289,7 +295,7 @@ public class LoginService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("OTP" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_OTP_FAILURE;
 		}
 	}
 	
@@ -305,7 +311,7 @@ public class LoginService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("OTP" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_OTP_FAILURE;
 		}
 	}
 
@@ -322,7 +328,7 @@ public class LoginService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("User Logout--->Not able to update" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_RESET_FAILURE;
 		}
 	}
 
@@ -339,7 +345,7 @@ public class LoginService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("User Logout--->Not able to update" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_RESET_FAILURE;
 		}
 	}
 
@@ -357,7 +363,7 @@ public class LoginService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("User Logout--->Not able to update" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_RESET_FAILURE;
 		}
 	}
 
@@ -374,7 +380,7 @@ public class LoginService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("User Logout--->Not able to update" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_RESET_FAILURE;
 		}
 	}
 	
@@ -391,7 +397,7 @@ public class LoginService {
 	} catch (Exception e) {
 		e.printStackTrace();
 		logger.debug("ChangePassword" + e.getMessage());
-		return e.getMessage();
+		return GENERIC_AUTH_FAILURE;
 	}
 	}
 
@@ -409,7 +415,7 @@ public class LoginService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("ChangePassword" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_AUTH_FAILURE;
 		}
 	}
 	
@@ -425,7 +431,7 @@ public class LoginService {
 	        return response.getBody();
 	    } catch (Exception e) {
 	        logger.error("TwoFA Error: {}", e.getMessage(), e);
-	        return "Error: " + e.getMessage();
+	        return GENERIC_AUTH_FAILURE;
 	    }
 	}
 	
@@ -442,7 +448,7 @@ public class LoginService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Authentication message" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_AUTH_FAILURE;
 		}
 	}
 

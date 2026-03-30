@@ -27,6 +27,12 @@ public class UserManagementController {
 	@Autowired
 	UserManagementService service;
 	
+	private static final String GENERIC_CREATE_FAILURE = "User creation failed. Please try again.";
+	private static final String GENERIC_UPDATE_FAILURE = "User update failed. Please try again.";
+	private static final String GENERIC_VERIFY_FAILURE = "User verification failed. Please try again.";
+	private static final String GENERIC_DELETE_FAILURE = "User deletion failed. Please try again.";
+	
+	
 	//Single User Management List
 	@GetMapping("/AllUserManagementList")
 	public List<UserManagementEntity> GetMerchantUnitAllUser(@RequestParam String merchant_user_id,
@@ -56,7 +62,7 @@ public class UserManagementController {
 			return response;
 		} catch (Exception ex) {
 			logger.debug("Failed to created Device---->" + ex.getMessage());
-			return ex.getMessage();
+			return GENERIC_CREATE_FAILURE;
 		}
 	}
 
@@ -70,7 +76,7 @@ public class UserManagementController {
 		} catch (Exception e) {
 			System.out.print("Exception-------" + e.getMessage());
 			logger.debug("Failed to Update Device---->" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_UPDATE_FAILURE;
 		}
 	}
 	// Update existing user

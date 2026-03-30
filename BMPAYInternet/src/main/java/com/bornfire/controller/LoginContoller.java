@@ -38,6 +38,11 @@ public class LoginContoller {
 	@Autowired
 	Environment env;
 	
+	private static final String GENERIC_AUTH_FAILURE   = "Invalid credentials. Please try again.";
+	private static final String GENERIC_OTP_FAILURE    = "If the account exists, an OTP has been sent.";
+	private static final String GENERIC_RESET_FAILURE  = "Password reset failed. Please try again.";
+	private static final String GENERIC_LOGOUT_FAILURE = "Logout failed. Please try again.";
+	
 	@GetMapping("/ws/infoForEveryScreen")
 	public ResponseEntity<?> getInfo(@RequestParam String screen_id) {
 	    String url = env.getProperty("intranetconnection") + "/api/ws/infoForEveryScreen?screen_id=" + screen_id;
@@ -68,7 +73,7 @@ public class LoginContoller {
 		} catch (Exception e) {
 			logger.debug("Login for TAB Exception: " + e.getMessage());
 			System.out.println("Exception: " + e.getMessage());
-			return  e.getMessage();
+			return  GENERIC_AUTH_FAILURE;
 		}
 	}
 
@@ -81,7 +86,7 @@ public class LoginContoller {
 		} catch (Exception e) {
 			logger.debug("Login for TAB Exception: " + e.getMessage());
 			System.out.println("Exception: " + e.getMessage());
-			return  e.getMessage();
+			return  GENERIC_AUTH_FAILURE;
 		}
 	}
 	// Logout for Tab
@@ -94,7 +99,7 @@ public class LoginContoller {
 		} catch (Exception e) {
 			logger.debug("Logout for TAB Exception: " + e.getMessage());
 			System.out.println("Exception: " + e.getMessage());
-			return e.getMessage();
+			return GENERIC_LOGOUT_FAILURE;
 		}
 	}
 
@@ -108,7 +113,7 @@ public class LoginContoller {
 		} catch (Exception e) {
 			logger.debug("Login for Mobile:Failed" + e.getMessage());
 			System.out.print("Exception: " + e.getMessage());
-			return e.getMessage();
+			return GENERIC_AUTH_FAILURE;
 
 		}
 	}
@@ -122,7 +127,7 @@ public class LoginContoller {
 			return response;
 		} catch (Exception e) {
 			System.out.print("Exception: " + e.getMessage());
-			return e.getMessage();
+			return GENERIC_LOGOUT_FAILURE;
 
 		}
 	}
@@ -136,7 +141,7 @@ public class LoginContoller {
 		} catch (Exception e) {
 			System.out.print("Exception: " + e.getMessage());
 			logger.debug("OTP sent to User: " + e.getMessage());
-			return e.getMessage();
+			return GENERIC_OTP_FAILURE;
 
 		}
 	}
@@ -150,7 +155,7 @@ public class LoginContoller {
 		} catch (Exception e) {
 			System.out.print("Exception: " + e.getMessage());
 			logger.debug("OTP sent to Merchant: " + e.getMessage());
-			return e.getMessage();
+			return GENERIC_OTP_FAILURE;
 
 		}
 	}
@@ -164,7 +169,7 @@ public class LoginContoller {
 			} catch (Exception e) {
 				System.out.print("Exception: " + e.getMessage());
 				logger.debug("OTP sent to Merchant: " + e.getMessage());
-				return e.getMessage();
+				return GENERIC_OTP_FAILURE;
 
 			}
 		}
@@ -178,7 +183,7 @@ public class LoginContoller {
 		} catch (Exception e) {
 			System.out.print("Exception: " + e.getMessage());
 			logger.debug("Failed to Reset User" + e.getMessage());
-			return  e.getMessage();
+			return  GENERIC_RESET_FAILURE;
 		}
 	}
 
@@ -192,7 +197,7 @@ public class LoginContoller {
 		} catch (Exception e) {
 			System.out.print("Exception: " + e.getMessage());
 			logger.debug("Reset Represtatvie User" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_RESET_FAILURE;
 
 		}
 	}
@@ -206,7 +211,7 @@ public class LoginContoller {
 		} catch (Exception e) {
 			System.out.print("Exception: " + e.getMessage());
 			logger.debug("Check password for Merchant" + e.getMessage());
-			return  e.getMessage();
+			return  GENERIC_AUTH_FAILURE;
 
 		}
 	}
@@ -220,7 +225,7 @@ public class LoginContoller {
 		} catch (Exception e) {
 			System.out.print("Exception: " + e.getMessage());
 			logger.debug("Check password for user" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_AUTH_FAILURE;
 
 		}
 	}
@@ -247,7 +252,7 @@ public class LoginContoller {
 		} catch (Exception e) {
 			System.out.print("Exception: " + e.getMessage());
 			logger.debug("Reset Represtatvie User" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_RESET_FAILURE;
 
 		}
 	}
@@ -262,7 +267,7 @@ public class LoginContoller {
 			} catch (Exception e) {
 				System.out.print("Exception: " + e.getMessage());
 				logger.debug("Reset Represtatvie User" + e.getMessage());
-				return e.getMessage();
+				return GENERIC_RESET_FAILURE;
 
 			}
 	}

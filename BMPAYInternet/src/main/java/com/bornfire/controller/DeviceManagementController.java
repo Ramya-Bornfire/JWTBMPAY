@@ -29,6 +29,13 @@ public class DeviceManagementController {
 	@Autowired
 	DeviceManagementService deviceService;
 	
+	private static final String GENERIC_CREATE_FAILURE = "Device creation failed. Please try again.";
+	private static final String GENERIC_UPDATE_FAILURE = "Device update failed. Please try again.";
+	private static final String GENERIC_DELETE_FAILURE = "Device deletion failed. Please try again.";
+	private static final String GENERIC_VERIFY_FAILURE = "Device verification failed. Please try again.";
+
+	
+	
 	@GetMapping("/AllDeviceList")
 	public List<DeviceManagementEntity> getAllDevice(@RequestParam String merchant_user_id,
 			@RequestParam String unit_id) {
@@ -58,7 +65,7 @@ public class DeviceManagementController {
 			return response;
 		} catch (Exception ex) {
 			logger.debug("Failed to created Device---->" + ex.getMessage());
-			return ex.getMessage();
+			return GENERIC_CREATE_FAILURE;
 		}
 
 	}
@@ -76,7 +83,7 @@ public class DeviceManagementController {
 			Map<String, String> response = new HashMap<>();
 			response.put("Status", "Failed");
 			response.put("Message", "Not Updating");
-			return e.getMessage();
+			return GENERIC_UPDATE_FAILURE;
 		}
 
 	}

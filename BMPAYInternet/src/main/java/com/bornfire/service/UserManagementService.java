@@ -28,6 +28,12 @@ public class UserManagementService {
 
 	@Autowired
 	Environment env;
+		
+	private static final String GENERIC_CREATE_FAILURE = "User creation failed. Please try again.";
+	private static final String GENERIC_UPDATE_FAILURE = "User update failed. Please try again.";
+	private static final String GENERIC_VERIFY_FAILURE = "User verification failed. Please try again.";
+	private static final String GENERIC_DELETE_FAILURE = "User deletion failed. Please try again.";
+
 
 	public List<UserManagementEntity> getMerchantUnitAllUserService(String merchantId, String unitId) {
 		String url = env.getProperty("intranetconnection") + "/api/AllUserManagementList?merchant_user_id="
@@ -73,7 +79,7 @@ public class UserManagementService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Device Not able to Create" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_CREATE_FAILURE;
 		}
 	}
 
@@ -91,7 +97,7 @@ public class UserManagementService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Merchant Representative profile--->Not able to update" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_UPDATE_FAILURE;
 		}
 	}
 	
@@ -108,7 +114,7 @@ public class UserManagementService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Merchant Representative profile--->Not able to update" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_VERIFY_FAILURE;
 		}
 	}
 	
@@ -126,7 +132,7 @@ public class UserManagementService {
         } catch (Exception e) {
             e.printStackTrace();
             logger.debug("User Not able to Delete" + e.getMessage());
-            return e.getMessage();
+            return GENERIC_DELETE_FAILURE;
         }
     }
 }

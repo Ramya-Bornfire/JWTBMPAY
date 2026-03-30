@@ -28,6 +28,9 @@ public class RateMaintanenceService {
 
 	@Autowired
 	Environment env;
+	
+	private static final String GENERIC_CREATE_FAILURE = "Rate creation failed. Please try again.";
+	private static final String GENERIC_UPDATE_FAILURE = "Rate update failed. Please try again.";
 
 	// Rate Maintenance list
 	public List<RateMaintainanceEntity> getAllrate() {
@@ -52,7 +55,7 @@ public class RateMaintanenceService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Device Not able to Create" + e.getMessage());
-			return "Error in creating Device";
+			return GENERIC_CREATE_FAILURE;
 		}
 	}
 
@@ -70,7 +73,7 @@ public class RateMaintanenceService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Merchant Representative profile--->Not able to update" + e.getMessage());
-			return "Error updating Representative Profile";
+			return GENERIC_UPDATE_FAILURE;
 		}
 	}
 }

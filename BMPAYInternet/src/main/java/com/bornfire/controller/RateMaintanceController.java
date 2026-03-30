@@ -29,6 +29,9 @@ public class RateMaintanceController {
 	@Autowired
 	RateMaintanenceService service;
 
+	private static final String GENERIC_CREATE_FAILURE = "Rate creation failed. Please try again.";
+	private static final String GENERIC_UPDATE_FAILURE = "Rate update failed. Please try again.";
+	
 	// All Rate Maintenance list
 	@GetMapping("/RateMaintenanceList")
 	public List<RateMaintainanceEntity> getAllratedetails() {
@@ -45,7 +48,7 @@ public class RateMaintanceController {
 
 		} catch (Exception ex) {
 			logger.debug("Failed to create rate" + ex.getMessage());
-			return ex.getMessage();
+			return GENERIC_CREATE_FAILURE;
 		}
 
 	}
@@ -60,7 +63,7 @@ public class RateMaintanceController {
 		} catch (Exception e) {
 			System.out.print("Exception------->" + e.getMessage());
 			logger.debug("Failed to update rate" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_UPDATE_FAILURE;
 		}
 
 	}

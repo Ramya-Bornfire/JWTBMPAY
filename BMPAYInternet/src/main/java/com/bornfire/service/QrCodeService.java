@@ -29,6 +29,10 @@ public class QrCodeService {
 	@Autowired
 	Environment env;
 
+	private static final String GENERIC_QR_FAILURE          = "QR code operation failed. Please try again.";
+	private static final String GENERIC_TRANSACTION_FAILURE = "Transaction could not be initiated. Please try again.";
+	private static final String GENERIC_SERVICE_FAILURE     = "The request could not be completed. Please try again.";
+	
 	// Static QR Code Service
 	public String createMerchantQRConnection(String p_id, String psuDeviceID, String psuIpAddress,String psuID,
 			String channelID, String acct_num, String resvfield2,String deviceID,String referencenumber,String UserID,String unit_id) {
@@ -53,7 +57,7 @@ public class QrCodeService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Device Not able to Create" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_QR_FAILURE;
 		}
 	}
 
@@ -80,7 +84,7 @@ public class QrCodeService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Device Not able to Create" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_QR_FAILURE;
 		}
 	}
 
@@ -104,7 +108,7 @@ public class QrCodeService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Device Not able to Create" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_QR_FAILURE;
 		}
 	}
 
@@ -131,7 +135,7 @@ public class QrCodeService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Device Not able to Create" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_TRANSACTION_FAILURE;
 		}
 	}
 	
@@ -155,7 +159,7 @@ public class QrCodeService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Device Not able to Create" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_QR_FAILURE;
 		}
 	}
 
@@ -180,7 +184,7 @@ public class QrCodeService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Device Not able to Create" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_TRANSACTION_FAILURE;
 		}
 	}
 	
@@ -193,7 +197,7 @@ public class QrCodeService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("TranAmount" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_SERVICE_FAILURE;
 		}
 	}
 	
@@ -206,7 +210,7 @@ public class QrCodeService {
 		        if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
 		            return "No details found for the given merchant ID, device ID, and user ID.";
 		        } else {
-		            return e.getMessage();
+		            return GENERIC_SERVICE_FAILURE;
 		        }
 		    }
 	}	

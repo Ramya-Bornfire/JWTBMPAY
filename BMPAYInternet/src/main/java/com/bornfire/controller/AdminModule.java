@@ -42,6 +42,11 @@ public class AdminModule {
 	@Autowired
 	private AdminModuleService service;
 	
+	private static final String GENERIC_FAILURE         = "The request could not be completed. Please try again.";
+	private static final String GENERIC_WRITE_FAILURE   = "Operation failed. Please try again.";
+	private static final String GENERIC_CB_FAILURE      = "Chargeback operation failed. Please try again.";
+	
+	
 	@GetMapping("/uniqueUserId")
     public String uniqueUserId(@RequestParam String merchant_id) {
 		return service.getUniqueUserId(merchant_id);
@@ -136,7 +141,7 @@ public class AdminModule {
 			String response = service.AddNotification(EncryptedString, psuDeviceID);
 			return response;
 		} catch (Exception ex) {
-			return ex.getMessage();
+			return GENERIC_WRITE_FAILURE;
 		}
 	}
 	
@@ -211,12 +216,12 @@ public class AdminModule {
 		try {
 			ResponseEntity<String> response = service.updateChargeBack(userid,seqUniqueID,merchant_id);
 			if (response.getStatusCode() != HttpStatus.OK) {
-				return "Failed to Initiate chargeback";
+				return GENERIC_CB_FAILURE;
 			}
 			return "Initiated Successfully.";
 		} catch (Exception e) {
 			System.out.println("Exception------->" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_CB_FAILURE;
 		}
 	}
 	
@@ -228,12 +233,12 @@ public class AdminModule {
 		try {
 			ResponseEntity<String> response = service.ApproveChargeBack(userid,seqUniqueID);
 			if (response.getStatusCode() != HttpStatus.OK) {
-				return "Failed to Initiate chargeback";
+				return GENERIC_CB_FAILURE;
 			}
 			return "Approved Successfully.";
 		} catch (Exception e) {
 			System.out.println("Exception------->" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_CB_FAILURE;
 		}
 		
 		

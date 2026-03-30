@@ -28,6 +28,11 @@ public class CustomerService {
 
 	@Autowired
 	Environment env;
+	
+	private static final String GENERIC_SERVICE_FAILURE    = "The request could not be completed. Please try again.";
+	private static final String GENERIC_QR_FAILURE         = "QR code operation failed. Please try again.";
+	private static final String GENERIC_TRANSACTION_FAILURE = "Transaction could not be initiated. Please try again.";
+	
 
 	// Static QR Code Service
 	public String createMerchantQRConnection(String p_id, String psuDeviceID, String psuIpAddress,String DeviceID, String psuID,
@@ -48,7 +53,7 @@ public class CustomerService {
 			return response.getBody();
 		} catch (Exception e) {
 			e.printStackTrace();
-			return e.getMessage();
+			return GENERIC_QR_FAILURE;
 		}
 	}
 	public String createMerchantQRConnection1(String p_id, String psuDeviceID, String psuIpAddress,String DeviceID, String psuID,
@@ -69,7 +74,7 @@ public class CustomerService {
 			return response.getBody();
 		} catch (Exception e) {
 			e.printStackTrace();
-			return e.getMessage();
+			return GENERIC_QR_FAILURE;
 		}
 	}
 	
@@ -92,7 +97,7 @@ public class CustomerService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Device Not able to Create" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_QR_FAILURE;
 		}
 	}
 	
@@ -115,7 +120,7 @@ public class CustomerService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Device Not able to Create" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_QR_FAILURE;
 		}
 	}
 	
@@ -140,7 +145,7 @@ public class CustomerService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Device Not able to Create" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_TRANSACTION_FAILURE;
 		}
 	}
 	public String InititeTransactionConnection1(String p_id, String psuDeviceID, String psuIpAddress, String psuID,
@@ -164,7 +169,7 @@ public class CustomerService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.debug("Device Not able to Create" + e.getMessage());
-			return e.getMessage();
+			return GENERIC_TRANSACTION_FAILURE;
 		}
 	}
 	
@@ -192,7 +197,7 @@ public class CustomerService {
             e.printStackTrace();
         }
 
-        return null;
+        return GENERIC_SERVICE_FAILURE;
     }
 
 		
